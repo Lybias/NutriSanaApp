@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Nutri‑Sana – Prototipo Web</title>
+  <style>
+    :root{
+      --green-900:#0f3d2e; /* principal oscuro */
+      --green-700:#1f5c45;
+      --green-500:#2f7d5c;
+      --green-200:#dfeee8;
+      --leaf:#2d8a55;
+      --accent:#e99a1a; /* naranja del corazón */
+      --bg:#f4f7f5;
+      --text:#0b1f17;
+      --muted:#6a7f76;
+      --card:#ffffff;
+      --shadow:0 10px 30px rgba(15,61,46,.12);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial,sans-serif;
+      background:radial-gradient(1200px 600px at 50% -20%, #eaf4ef 0%, var(--bg) 60%);
+      color:var(--text);
+      display:grid; place-items:center;
+      padding:18px;
+    }
+    /* Phone frame */
+    .phone{
+      width:390px; /* iPhone 12/13/14 base */
+      height:844px;
+      background:var(--bg);
+      border-radius:38px;
+      box-shadow:0 20px 60px rgba(0,0,0,.15), inset 0 0 0 10px #111;
+      position:relative;
+      overflow:hidden;
+    }
+    .notch{position:absolute; left:50%; top:0; transform:translateX(-50%);
+      width:210px; height:30px; background:#111; border-bottom-left-radius:18px; border-bottom-right-radius:18px;}
+
+    /* App chrome */
+    header.appbar{display:flex; align-items:center; gap:10px; padding:18px 20px; position:sticky; top:0; z-index:5; background:linear-gradient(#f9fbfa 40%, rgba(249,251,250,.7)); backdrop-filter:saturate(1.2) blur(6px);}
+    .back{appearance:none; border:0; background:var(--card); border-radius:14px; width:36px; height:36px; display:grid; place-items:center; box-shadow:var(--shadow);}
+    .title{font-weight:800; letter-spacing:.2px; color:var(--green-900); font-size:1.35rem}
+
+    main{position:absolute; inset:0; overflow:auto; padding-bottom:100px}
+
+    .screen{display:none; padding:18px}
+    .screen.active{display:block}
+
+    .cta{position:absolute; left:18px; right:18px; bottom:22px; display:flex; gap:12px}
+    .btn{flex:1; display:inline-flex; justify-content:center; align-items:center; gap:.6rem; padding:14px 16px; background:var(--green-900); color:#fff; border:0; border-radius:16px; font-weight:700; box-shadow:var(--shadow); cursor:pointer}
+    .btn.secondary{background:var(--card); color:var(--green-900); border:1px solid var(--green-200)}
+    .btn.small{padding:10px 12px; border-radius:12px; font-weight:600}
+
+    /* Cards & lists */
+    .card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px}
+    .grid{display:grid; gap:14px}
+    .grid.cols2{grid-template-columns:1fr 1fr}
+    .row{display:flex; align-items:center; gap:12px}
+
+    .chip{background:var(--green-200); color:var(--green-700); padding:6px 10px; border-radius:999px; font-size:.8rem; font-weight:600}
+
+    /* Splash */
+    .splash{display:grid; place-items:center; text-align:center; height:100%; padding:32px}
+    .logo{width:140px; aspect-ratio:1/1; display:block; margin:10px auto 14px}
+    .brand{font-weight:800; font-size:2rem; color:var(--green-900); letter-spacing:.3px}
+    .subtitle{color:var(--muted); margin-top:6px}
+
+    /* Home */
+    .hello{font-size:1.1rem; color:var(--muted); margin:6px 0 16px}
+    .tile{display:flex; align-items:center; gap:14px; padding:14px; border-radius:16px; background:linear-gradient(180deg,#f7fbf8,#f0f7f3); border:1px solid #e5efe9; cursor:pointer}
+    .tile .icon{width:42px; height:42px; border-radius:12px; display:grid; place-items:center; background:var(--card); box-shadow:var(--shadow)}
+    .tile h4{margin:0; color:var(--green-900)}
+    .tile p{margin:2px 0 0; color:var(--muted); font-size:.9rem}
+
+    /* Scanner */
+    .scan-box{border:2px dashed #cfe4d9; border-radius:20px; padding:16px; text-align:center; background:linear-gradient(180deg,#ffffff, #f6fbf8)}
+    .preview{width:100%; border-radius:16px; object-fit:cover; background:#eee; height:180px}
+    .nutri{margin-top:14px}
+    .nutri .row{justify-content:space-between; padding:10px 0; border-bottom:1px dashed #e5efe9}
+    .nutri .row:last-child{border-bottom:0}
+
+    /* Plan */
+    .progress{--p:65; height:16px; background:#eaf3ee; border-radius:999px; position:relative; overflow:hidden}
+    .progress::after{content:""; position:absolute; left:0; top:0; bottom:0; width:calc(var(--p)*1%); background:linear-gradient(90deg,var(--leaf), var(--green-500));}
+    .ring{--val:72; width:120px; aspect-ratio:1/1; border-radius:50%; background:conic-gradient(var(--accent) calc(var(--val)*1%), #ececec 0); display:grid; place-items:center; margin:auto}
+    .ring span{background:#fff; border-radius:50%; width:86px; height:86px; display:grid; place-items:center; box-shadow:var(--shadow); font-weight:800; color:var(--green-900)}
+
+    /* Rewards */
+    .points{display:flex; align-items:center; justify-content:space-between}
+    .points strong{font-size:1.6rem; color:var(--green-900)}
+    .reward-list li{display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px dashed #e5efe9}
+
+    /* Bottom nav */
+    nav.bottom{position:absolute; left:0; right:0; bottom:0; height:78px; background:#fff; box-shadow:0 -10px 30px rgba(0,0,0,.08); display:flex; justify-content:space-around; align-items:center; border-top-left-radius:22px; border-top-right-radius:22px}
+    nav.bottom button{appearance:none; border:0; background:transparent; display:grid; place-items:center; gap:4px; color:var(--muted); font-weight:700}
+    nav.bottom button.active{color:var(--green-900)}
+    nav .bar{width:42px; height:4px; background:#dbe8e2; border-radius:999px; position:absolute; top:8px; left:50%; transform:translateX(-50%)}
+
+    /* Mini avatar */
+    .avatar{width:32px; height:32px; border-radius:999px; background:url('https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200&auto=format&fit=crop') center/cover}
+
+    /* Anim */
+    .fade{animation:fade .35s ease}
+    @keyframes fade{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+    .pulse{animation:pulse 1.6s infinite}
+    @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(233,154,26,.35)}70%{box-shadow:0 0 0 18px rgba(233,154,26,0)}100%{box-shadow:0 0 0 0 rgba(233,154,26,0)}}
+
+    /* Utility */
+    .mt8{margin-top:8px} .mt12{margin-top:12px} .mt16{margin-top:16px} .mt24{margin-top:24px}
+    .center{text-align:center}
+  </style>
+</head>
+<body>
+  <div class="phone" role="application" aria-label="Prototipo Nutri‑Sana">
+    <div class="notch" aria-hidden="true"></div>
+
+    <main id="router">
+
+      <!-- 0. SPLASH -->
+      <section id="splash" class="screen active">
+        <div class="splash fade">
+          <svg class="logo" viewBox="0 0 200 200" aria-hidden="true">
+            <!-- Corazón naranja -->
+            <path d="M100 120C90 100 60 88 60 60c0-22 18-40 40-40s40 18 40 40c0 28-30 40-40 60z" fill="var(--accent)"/>
+            <!-- Hojas verdes -->
+            <path d="M100 145c-14-22-40-28-56-16 8 22 34 34 56 28" fill="var(--leaf)"/>
+            <path d="M100 145c14-22 40-28 56-16-8 22-34 34-56 28" fill="var(--leaf)"/>
+            <!-- Tallo -->
+            <rect x="95" y="140" width="10" height="28" rx="4" fill="var(--green-700)"/>
+          </svg>
+          <div class="brand">Nutri‑sana</div>
+          <div class="subtitle">Alimentación inteligente, salud accesible</div>
+        </div>
+        <div class="cta">
+          <button class="btn pulse" data-goto="home" aria-label="Comenzar">Comenzar</button>
+        </div>
+      </section>
+
+      <!-- 1. HOME / DASHBOARD -->
+      <section id="home" class="screen" aria-labelledby="home-title">
+        <header class="appbar">
+          <div class="avatar" aria-hidden="true"></div>
+          <div>
+            <div class="title" id="home-title">Nutri‑sana</div>
+            <div class="hello">Hola, <strong>Andrea</strong></div>
+          </div>
+        </header>
+
+        <div class="grid">
+          <div class="tile" role="button" tabindex="0" data-goto="plan">
+            <div class="icon" aria-hidden="true">🍽️</div>
+            <div>
+              <h4>Mi plan</h4>
+              <p>Plan nutricional personalizado</p>
+            </div>
+            <span class="chip" style="margin-left:auto">Hoy: 1/3</span>
+          </div>
+
+          <div class="tile" role="button" tabindex="0" data-goto="scanner">
+            <div class="icon" aria-hidden="true">🍏</div>
+            <div>
+              <h4>Escáner de alimentos</h4>
+              <p>Conoce los valores nutricionales</p>
+            </div>
+          </div>
+
+          <div class="tile" role="button" tabindex="0" data-goto="chat">
+            <div class="icon" aria-hidden="true">💬</div>
+            <div>
+              <h4>Consultar a un nutricionista</h4>
+              <p>Chat en línea con un experto (demo)</p>
+            </div>
+          </div>
+
+          <div class="tile" role="button" tabindex="0" data-goto="rewards">
+            <div class="icon" aria-hidden="true">🏆</div>
+            <div>
+              <h4>Recompensas</h4>
+              <p>Gana puntos por hábitos saludables</p>
+            </div>
+            <span class="chip" id="pointsChip">0 pts</span>
+          </div>
+        </div>
+
+        <nav class="bottom" aria-label="Navegación">
+          <div class="bar" aria-hidden="true"></div>
+          <button class="active" data-goto="home">🏠<small>Inicio</small></button>
+          <button data-goto="plan">🍽️<small>Plan</small></button>
+          <button data-goto="scanner">🍏<small>Escáner</small></button>
+          <button data-goto="rewards">🏆<small>Logros</small></button>
+        </nav>
+      </section>
+
+      <!-- 2. SCANNER -->
+      <section id="scanner" class="screen" aria-labelledby="scanner-title">
+        <header class="appbar">
+          <button class="back" data-goto="home" aria-label="Volver">←</button>
+          <div class="title" id="scanner-title">Escáner de alimentos</div>
+        </header>
+
+        <div class="grid">
+          <div class="card scan-box">
+            <img id="scanPreview" class="preview" alt="Vista previa del producto" />
+            <div class="mt12 center" style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap">
+              <label class="btn small secondary" style="cursor:pointer">
+                Cargar foto
+                <input id="fileInput" type="file" accept="image/*" hidden>
+              </label>
+              <button class="btn small" id="simulateBtn">Simular escaneo</button>
+              <select id="demoSelect" class="btn small secondary" style="font-weight:600">
+                <option value="">Producto demo…</option>
+                <option value="avena">Avena integral 40g</option>
+                <option value="yogurt">Yogurt natural 150g</option>
+                <option value="barrita">Barrita de cereal 25g</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="card nutri" id="nutriCard" aria-live="polite">
+            <h3 style="margin:0 0 6px; color:var(--green-900)">Información nutricional</h3>
+            <div id="nutriRows"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. PLAN -->
+      <section id="plan" class="screen" aria-labelledby="plan-title">
+        <header class="appbar">
+          <button class="back" data-goto="home" aria-label="Volver">←</button>
+          <div class="title" id="plan-title">Mi plan</div>
+        </header>
+
+        <div class="grid">
+          <div class="card">
+            <div class="row" style="justify-content:space-between">
+              <div>
+                <h3 style="margin:0; color:var(--green-900)">Semana 1</h3>
+                <small class="muted">Objetivo: equilibrio 50/20/30</small>
+              </div>
+              <div class="ring" title="Progreso semanal"><span id="ringVal">72%</span></div>
+            </div>
+            <div class="mt16">
+              <div class="row" style="justify-content:space-between">
+                <strong>Progreso diario</strong>
+                <span class="chip" id="mealsChip">1/3 comidas</span>
+              </div>
+              <div class="progress mt8" id="dayProgress" style="--p:33"></div>
+              <div class="row mt12" style="gap:10px">
+                <button class="btn small" id="logMeal">Registrar comida</button>
+                <button class="btn small secondary" id="resetMeal">Reiniciar</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h4 style="margin:0 0 10px; color:var(--green-900)">Menú sugerido de hoy</h4>
+            <ul style="margin:0; padding-left:18px">
+              <li>Desayuno: Avena con banana y semillas</li>
+              <li>Almuerzo: Pollo a la plancha + arroz integral + ensalada</li>
+              <li>Cena: Ensalada de quinua con palta y tomate</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. REWARDS -->
+      <section id="rewards" class="screen" aria-labelledby="rewards-title">
+        <header class="appbar">
+          <button class="back" data-goto="home" aria-label="Volver">←</button>
+          <div class="title" id="rewards-title">Recompensas</div>
+        </header>
+
+        <div class="grid">
+          <div class="card points">
+            <div>
+              <div class="muted">Tus puntos</div>
+              <strong id="points">0</strong>
+            </div>
+            <button class="btn small" id="redeemBtn">Canjear 50 pts</button>
+          </div>
+
+          <div class="card">
+            <h4 style="margin:0 0 10px; color:var(--green-900)">Logros rápidos</h4>
+            <ul class="reward-list" style="list-style:none; padding:0; margin:0">
+              <li><span>Registrar 3 comidas</span> <span class="chip">+15</span></li>
+              <li><span>Escanear 2 productos</span> <span class="chip">+10</span></li>
+              <li><span>7 días de racha</span> <span class="chip">+50</span></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. CHAT (demo) -->
+      <section id="chat" class="screen" aria-labelledby="chat-title">
+        <header class="appbar">
+          <button class="back" data-goto="home" aria-label="Volver">←</button>
+          <div class="title" id="chat-title">Chat nutricional (demo)</div>
+        </header>
+
+        <div class="grid">
+          <div class="card" id="chatBox" style="height:520px; overflow:auto">
+            <div class="row" style="align-items:flex-start">
+              <div class="icon" aria-hidden="true">🥗</div>
+              <div>
+                <strong>Nutri‑bot</strong>
+                <p class="mt8" style="margin:6px 0 0">¡Hola! Puedo sugerirte un snack saludable o estimar calorías rápidas. Escribe: <em>snack</em> o <em>calorías 1 plátano</em>.</p>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <input id="chatInput" class="card" placeholder="Escribe tu consulta…" style="flex:1; padding:12px 14px"/>
+            <button class="btn small" id="chatSend">Enviar</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    // --- Estado simple en localStorage ---
+    const state = {
+      points: Number(localStorage.getItem('ns_points')||0),
+      meals: Number(localStorage.getItem('ns_meals')||1),
+      scans: Number(localStorage.getItem('ns_scans')||0)
+    };
+    const save = ()=>{
+      localStorage.setItem('ns_points', state.points);
+      localStorage.setItem('ns_meals', state.meals);
+      localStorage.setItem('ns_scans', state.scans);
+      document.getElementById('points').textContent = state.points;
+      document.getElementById('pointsChip').textContent = state.points + ' pts';
+      document.getElementById('mealsChip').textContent = `${state.meals}/3 comidas`;
+      document.getElementById('dayProgress').style.setProperty('--p', Math.min(100, state.meals*33));
+    }
+
+    // --- Router ---
+    function go(id){
+      document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      window.scrollTo({top:0, behavior:'smooth'});
+      document.querySelectorAll('nav.bottom button').forEach(b=>b.classList.toggle('active', b.dataset.goto===id));
+    }
+    document.addEventListener('click', (e)=>{
+      const t = e.target.closest('[data-goto]');
+      if(t){ go(t.dataset.goto); }
+    });
+
+    // --- Home actions init ---
+    save();
+
+    // --- Scanner demo ---
+    const demoDB = {
+      avena:{name:'Avena integral (40g)', kcal:148, fat:'3.0 g', carbs:'25 g', protein:'5 g', fiber:'4 g'},
+      yogurt:{name:'Yogurt natural (150g)', kcal:92, fat:'3 g', carbs:'10 g', protein:'6 g', calcium:'18 % VD'},
+      barrita:{name:'Barrita de cereal (25g)', kcal:110, fat:'2 g', carbs:'20 g', protein:'2 g', azucar:'8 g'}
+    };
+
+    const nutriRows = document.getElementById('nutriRows');
+    function renderNutrition(obj){
+      const keys = Object.keys(obj).filter(k=>k!=='name');
+      const rows = keys.map(k=>`<div class="row"><span>${capitalize(k)}</span><strong>${obj[k]}</strong></div>`).join('');
+      document.getElementById('nutriCard').querySelector('h3').textContent = obj.name || 'Información nutricional';
+      nutriRows.innerHTML = rows || '<p class="muted">Escanea un producto o elige un demo.</p>';
+    }
+    function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+    document.getElementById('demoSelect').addEventListener('change', e=>{
+      const v = e.target.value;
+      if(demoDB[v]){ renderNutrition(demoDB[v]);
+        state.scans++; state.points+=5; save(); }
+    });
+    document.getElementById('simulateBtn').addEventListener('click', ()=>{
+      const keys = Object.keys(demoDB); const pick = demoDB[keys[Math.floor(Math.random()*keys.length)]];
+      renderNutrition(pick);
+      state.scans++; state.points+=5; save();
+    });
+
+    // Cargar foto (solo vista previa, sin OCR)
+    const fileInput = document.getElementById('fileInput');
+    const preview = document.getElementById('scanPreview');
+    fileInput.addEventListener('change', ()=>{
+      const f = fileInput.files[0];
+      if(f){ const url = URL.createObjectURL(f); preview.src = url; preview.alt = 'Producto seleccionado'; }
+    });
+
+    // --- Plan: registrar comidas suma puntos ---
+    document.getElementById('logMeal').addEventListener('click', ()=>{
+      if(state.meals<3){ state.meals++; state.points+=10; save(); }
+    });
+    document.getElementById('resetMeal').addEventListener('click', ()=>{ state.meals=0; save(); });
+
+    // --- Rewards ---
+    document.getElementById('redeemBtn').addEventListener('click', ()=>{
+      if(state.points>=50){ state.points-=50; alert('🎉 Canje realizado: 1 guía de recetas PDF'); save(); }
+      else alert('Necesitas al menos 50 puntos');
+    });
+
+    // --- Chat demo ---
+    const chatBox = document.getElementById('chatBox');
+    const chatInput = document.getElementById('chatInput');
+    document.getElementById('chatSend').addEventListener('click', sendMsg);
+    chatInput.addEventListener('keydown', e=>{ if(e.key==='Enter') sendMsg(); });
+
+    function sendMsg(){
+      const msg = chatInput.value.trim(); if(!msg) return;
+      addBubble('Tú', msg);
+      chatInput.value='';
+      setTimeout(()=>{ addBubble('Nutri‑bot', botReply(msg)); }, 450);
+    }
+
+    function addBubble(who, text){
+      const wrap = document.createElement('div');
+      wrap.className='row mt12';
+      wrap.innerHTML = `<div class="icon" aria-hidden="true">${who==='Tú'?'🧑‍💻':'🥗'}</div><div><strong>${who}</strong><p class="mt8" style="margin:6px 0 0">${escapeHtml(text)}</p></div>`;
+      chatBox.appendChild(wrap); chatBox.scrollTop = chatBox.scrollHeight;
+    }
+    function botReply(q){
+      q = q.toLowerCase();
+      if(q.includes('snack')) return 'Prueba yogur natural con fruta y avena (≈180 kcal). Alto en proteína y fibra.';
+      if(q.includes('calor') && q.includes('plátano')) return 'Un plátano mediano tiene ~105 kcal, 27 g de carbohidratos y 3 g de fibra.';
+      if(q.includes('agua')) return 'Objetivo diario: 30–35 ml/kg de peso. Ej.: 70 kg → 2.1–2.4 L.';
+      return 'Puedo ayudarte con snacks, estimar calorías rápidas o proporciones 50/20/30. Escribe: "snack" o "calorías 1 plátano".';
+    }
+    function escapeHtml(s){ return s.replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m])); }
+
+    // Navegar directo por hash, opcional
+    if(location.hash){ const id=location.hash.slice(1); if(document.getElementById(id)) go(id); }
+    window.addEventListener('hashchange', ()=>{ const id=location.hash.slice(1); if(document.getElementById(id)) go(id); });
+  </script>
+</body>
+</html>

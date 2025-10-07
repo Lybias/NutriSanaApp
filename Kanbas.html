@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tablero Kanban — Nutri‑Sana App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: #0b1220;
+      --panel: #111a2b;
+      --card: #0f1729;
+      --muted: #8ea0bd;
+      --text: #e6eefc;
+      --accent: #6aa6ff;
+      --accent-2:#7af0d9;
+      --todo:#3b82f6;       /* azul */
+      --doing:#f59e0b;      /* ámbar */
+      --done:#10b981;       /* verde */
+      --chip:#1f2a44;
+      --border:#1f2940;
+      --shadow: 0 8px 24px rgba(0,0,0,.35);
+      --radius: 16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background:radial-gradient(1000px 600px at 20% -10%, #1a2540 0%, #0b1220 55%, #070c16 100%); color:var(--text);
+      min-height:100dvh; display:flex; flex-direction:column; gap:24px;
+    }
+    header{
+      padding:24px clamp(16px,4vw,32px) 0;
+    }
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+    }
+    .brand{display:flex; align-items:center; gap:12px}
+    .logo{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),#9f7aea); box-shadow:var(--shadow)}
+    .brand h1{font-size:clamp(18px,2.6vw,24px); margin:0}
+    .meta{display:flex; gap:12px; align-items:center; flex-wrap:wrap}
+    .select, .search{background:var(--panel); border:1px solid var(--border); color:var(--text); border-radius:12px; padding:10px 12px}
+    .search{min-width:220px}
+
+    .progress{
+      margin-top:16px; background:linear-gradient(180deg,#0c1322,#0a101b); border:1px solid var(--border); border-radius:14px; padding:14px 16px;
+      display:grid; gap:10px; box-shadow:var(--shadow)
+    }
+    .progress .row{display:flex; align-items:center; justify-content:space-between; gap:14px; font-size:14px; color:var(--muted)}
+    .bar{height:12px; background:#101729; border:1px solid var(--border); border-radius:999px; overflow:hidden}
+    .bar>i{display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--accent),var(--accent-2));}
+
+    .kanban{
+      padding:0 clamp(16px,4vw,32px) 40px;
+    }
+    .columns{
+      display:grid; grid-template-columns:repeat(3,1fr); gap:18px;
+    }
+    .column{
+      background:linear-gradient(180deg,#101a30,#0d1628); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; display:flex; flex-direction:column;
+    }
+    .col-head{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; border-bottom:1px solid var(--border)}
+    .col-title{display:flex; align-items:center; gap:10px; font-weight:700}
+    .pill{padding:2px 8px; border-radius:999px; font-size:12px; color:#0b1220; font-weight:700}
+    .pill.todo{background:var(--todo)}
+    .pill.doing{background:var(--doing)}
+    .pill.done{background:var(--done)}
+
+    .dropzone{display:flex; flex-direction:column; gap:12px; padding:14px; min-height:220px}
+    .card{
+      background:var(--card); border:1px solid var(--border); border-radius:14px; padding:12px 12px 10px; display:grid; gap:10px; cursor:grab; transition:.2s transform ease, .2s border-color ease;
+    }
+    .card:active{cursor:grabbing; transform:scale(.99)}
+    .card:hover{border-color:#2c3c64}
+    .title{font-weight:700; font-size:14px; line-height:1.3}
+    .tags{display:flex; gap:8px; flex-wrap:wrap}
+    .tag{background:var(--chip); color:var(--muted); border:1px solid var(--border); padding:4px 8px; border-radius:999px; font-size:12px}
+    .footer{display:flex; align-items:center; justify-content:space-between; color:var(--muted); font-size:12px}
+    .badge{display:inline-flex; align-items:center; gap:6px}
+    .dot{width:8px;height:8px;border-radius:50%}
+    .dot.todo{background:var(--todo)}
+    .dot.doing{background:var(--doing)}
+    .dot.done{background:var(--done)}
+
+    .ghost{opacity:.5; border-style:dashed}
+
+    @media (max-width: 960px){
+      .columns{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">🍏</div>
+        <h1>Tablero Kanban — Nutri‑Sana App</h1>
+      </div>
+      <div class="meta">
+        <select class="select" id="roleFilter" aria-label="Filtrar por rol">
+          <option value="all">Todos los roles</option>
+          <option value="Investigación">Investigación</option>
+          <option value="UX/UI">UX/UI</option>
+          <option value="Desarrollo">Desarrollo</option>
+          <option value="Contenido">Contenido</option>
+          <option value="Innovación/IA">Innovación/IA</option>
+        </select>
+        <input class="search" id="searchBox" placeholder="Buscar tarea… (ej. prototipo, escaneo)" />
+      </div>
+    </div>
+
+    <div class="progress" role="region" aria-label="Resumen de avance">
+      <div class="row">
+        <div>
+          <strong id="countTodo">0</strong> por hacer ·
+          <strong id="countDoing">0</strong> en curso ·
+          <strong id="countDone">0</strong> terminado
+        </div>
+        <div><strong id="percent">0%</strong> completado</div>
+      </div>
+      <div class="bar" aria-hidden="true"><i id="bar"></i></div>
+    </div>
+  </header>
+
+  <main class="kanban">
+    <section class="columns" id="board">
+      <!-- POR HACER -->
+      <div class="column" data-col="todo">
+        <div class="col-head">
+          <div class="col-title"><span class="pill todo">Por hacer</span></div>
+          <div class="col-title" id="todoCount">0</div>
+        </div>
+        <div class="dropzone" id="todo"></div>
+      </div>
+
+      <!-- EN CURSO -->
+      <div class="column" data-col="doing">
+        <div class="col-head">
+          <div class="col-title"><span class="pill doing">En curso</span></div>
+          <div class="col-title" id="doingCount">0</div>
+        </div>
+        <div class="dropzone" id="doing"></div>
+      </div>
+
+      <!-- TERMINADO -->
+      <div class="column" data-col="done">
+        <div class="col-head">
+          <div class="col-title"><span class="pill done">Terminado</span></div>
+          <div class="col-title" id="doneCount">0</div>
+        </div>
+        <div class="dropzone" id="done"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Datos base (del mensaje del usuario) con asignación de roles
+    const tasks = [
+      { title: 'Investigar necesidades del público objetivo', role: 'Investigación', status: 'todo' },
+      { title: 'Analizar apps similares', role: 'Investigación', status: 'todo' },
+      { title: 'Establecer funcionalidades mínimas (MVP)', role: 'Desarrollo', status: 'todo' },
+      { title: 'Redactar requerimientos técnicos y de usuario', role: 'UX/UI', status: 'todo' },
+      { title: 'Diseñar flujo del usuario dentro de la app', role: 'UX/UI', status: 'todo' },
+      { title: 'Planificar estructura de base de datos nutricional', role: 'Desarrollo', status: 'todo' },
+      { title: 'Seleccionar fuentes para recetas saludables', role: 'Contenido', status: 'todo' },
+      { title: 'Planificar integración del chatbot con IA', role: 'Innovación/IA', status: 'todo' },
+      { title: 'Crear estructura del generador de planes personalizados', role: 'Desarrollo', status: 'todo' },
+
+      { title: 'Diseñar pantallas principales de la app', role: 'UX/UI', status: 'doing' },
+      { title: 'Crear prototipo en Canva', role: 'UX/UI', status: 'doing' },
+      { title: 'Programar módulo de escaneo de productos', role: 'Desarrollo', status: 'doing' },
+      { title: 'Crear prototipo en Figma o Canva', role: 'UX/UI', status: 'doing' },
+      { title: 'Programar módulo de escaneo de productos', role: 'Desarrollo', status: 'doing' },
+      { title: 'Diseñar pantallas principales de la app', role: 'UX/UI', status: 'doing' },
+      { title: 'Crear prototipo en Canva', role: 'Innovación/IA', status: 'doing' },
+      { title: 'Programar módulo de escaneo de productos', role: 'Desarrollo', status: 'doing' },
+
+      { title: 'Definir visión general del proyecto', role: 'Investigación', status: 'done' },
+      { title: 'Crear lista de funcionalidades del MVP', role: 'UX/UI', status: 'done' },
+      { title: 'Elegir nombre y logo para la app', role: 'Desarrollo', status: 'done' },
+      { title: 'Definir visión general del proyecto', role: 'Contenido', status: 'done' },
+      { title: 'Crear lista de funcionalidades del MVP', role: 'Innovación/IA', status: 'done' },
+      { title: 'Elegir nombre y logo y publicarlo en Play Store', role: 'Desarrollo', status: 'done' },
+    ];
+
+    const roleColors = {
+      'Investigación': '#8b9fd4',
+      'UX/UI': '#c59bff',
+      'Desarrollo': '#7af0d9',
+      'Contenido': '#ffd28e',
+      'Innovación/IA': '#ff9ac1'
+    };
+
+    const todo = document.getElementById('todo');
+    const doing = document.getElementById('doing');
+    const done = document.getElementById('done');
+
+    // Render cards
+    function render(list = tasks){
+      [todo, doing, done].forEach(z=>z.innerHTML='');
+      list.forEach((t, idx) => {
+        const el = document.createElement('article');
+        el.className = 'card';
+        el.draggable = true;
+        el.dataset.index = idx;
+        el.dataset.role = t.role;
+        el.dataset.status = t.status;
+        el.innerHTML = `
+          <div class="title">${t.title}</div>
+          <div class="tags">
+            <span class="tag" style="border-color:transparent;background:${hexToAlpha(roleColors[t.role]||'#fff',0.12)};color:${roleColors[t.role]||'#fff'}">${t.role}</span>
+          </div>
+          <div class="footer">
+            <span class="badge"><span class="dot ${t.status}"></span> ${label(t.status)}</span>
+            <span class="badge">ID #${String(idx+1).padStart(3,'0')}</span>
+          </div>`;
+        (t.status==='todo'?todo:t.status==='doing'?doing:done).appendChild(el);
+      });
+      updateStats();
+      wireDnD();
+      applyFilters();
+    }
+
+    function label(s){
+      return s==='todo'?'Por hacer': s==='doing'?'En curso':'Terminado';
+    }
+
+    function hexToAlpha(hex, alpha){
+      const c = hex.replace('#','');
+      const bigint = parseInt(c,16);
+      const r = (bigint>>16)&255, g=(bigint>>8)&255, b=bigint&255;
+      return `rgba(${r},${g},${b},${alpha})`;
+    }
+
+    // Stats & progress
+    function updateStats(){
+      const counts = {todo:0, doing:0, done:0};
+      document.querySelectorAll('.card').forEach(c=>counts[c.querySelector('.dot').classList[1]]++);
+      document.getElementById('todoCount').textContent = counts.todo;
+      document.getElementById('doingCount').textContent = counts.doing;
+      document.getElementById('doneCount').textContent = counts.done;
+      document.getElementById('countTodo').textContent = counts.todo;
+      document.getElementById('countDoing').textContent = counts.doing;
+      document.getElementById('countDone').textContent = counts.done;
+      const total = counts.todo + counts.doing + counts.done;
+      const pct = total? Math.round((counts.done/total)*100):0;
+      document.getElementById('percent').textContent = pct + '%';
+      document.getElementById('bar').style.width = pct + '%';
+    }
+
+    // Drag & Drop
+    function wireDnD(){
+      document.querySelectorAll('.card').forEach(card=>{
+        card.addEventListener('dragstart', e=>{
+          e.dataTransfer.setData('text/plain', card.dataset.index);
+          setTimeout(()=>card.classList.add('ghost'),0);
+        });
+        card.addEventListener('dragend', ()=> card.classList.remove('ghost'));
+      });
+      document.querySelectorAll('.dropzone').forEach(zone=>{
+        zone.addEventListener('dragover', e=>{ e.preventDefault();});
+        zone.addEventListener('drop', e=>{
+          e.preventDefault();
+          const idx = e.dataTransfer.getData('text/plain');
+          const newStatus = zone.id; // todo/doing/done
+          tasks[idx].status = newStatus;
+          render(filteredBase());
+        });
+      });
+    }
+
+    // Filtering
+    const roleFilter = document.getElementById('roleFilter');
+    const searchBox = document.getElementById('searchBox');
+
+    roleFilter.addEventListener('change', ()=> render(filteredBase()));
+    searchBox.addEventListener('input', ()=> applyFilters());
+
+    function filteredBase(){
+      const role = roleFilter.value;
+      if(role==='all') return tasks;
+      return tasks.filter(t=> t.role===role);
+    }
+
+    function applyFilters(){
+      const q = searchBox.value.trim().toLowerCase();
+      document.querySelectorAll('.card').forEach(c=>{
+        const text = (c.querySelector('.title').textContent + ' ' + c.dataset.role).toLowerCase();
+        c.style.display = text.includes(q)?'grid':'none';
+      });
+      updateStats();
+    }
+
+    render();
+  </script>
+</body>
+</html>
